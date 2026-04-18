@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Video Study Planner |</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, 'Segoe UI', 'Inter', 'Helvetica Neue', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(145deg, #f0f4fa 0%, #e6edf4 100%);
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* header & main card */
+    .app-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .app-header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #1f2b3c, #2c3e50);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      letter-spacing: -0.3px;
+    }
+
+    .app-header p {
+      color: #4a627a;
+      margin-top: 0.4rem;
+      font-weight: 500;
+    }
+
+    /* main layout: video list + summary panel */
+    .dashboard {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .video-section {
+      flex: 2;
+      min-width: 280px;
+    }
+
+    .summary-panel {
+      flex: 1.2;
+      min-width: 280px;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(2px);
+      border-radius: 2rem;
+      padding: 1.5rem;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      height: fit-content;
+      position: sticky;
+      top: 1.5rem;
+    }
+
+    /* video cards list */
+    .videos-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .video-card {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 1.2rem 1.2rem;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s ease;
+      border: 1px solid #eef2f8;
+    }
+
+    .video-card:hover {
+      border-color: #cbdbe2;
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      align-items: flex-end;
+      margin-bottom: 0.8rem;
+    }
+
+    .input-group {
+      flex: 1;
+      min-width: 130px;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #5b6f8c;
+      margin-bottom: 0.2rem;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 0.6rem 0.7rem;
+      border-radius: 1rem;
+      border: 1px solid #cfdfed;
+      background: #fefefe;
+      font-size: 0.9rem;
+      transition: 0.2s;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+    }
+
+    .speed-individual {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .remove-btn {
+      background: #fee2e2;
+      border: none;
+      font-size: 1.2rem;
+      font-weight: bold;
+      padding: 0.4rem 0.9rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      color: #b91c1c;
+      transition: 0.1s;
+    }
+
+    .remove-btn:hover {
+      background: #fecaca;
+      transform: scale(0.97);
+    }
+
+    /* action buttons */
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 0.8rem;
+      justify-content: space-between;
+    }
+
+    button {
+      background: #2c3e50;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 2rem;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    button.primary {
+      background: #2563eb;
+    }
+
+    button.primary:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+    }
+
+    button.outline {
+      background: #eef2ff;
+      color: #1e293b;
+      border: 1px solid #cbd5e1;
+    }
+
+    button.outline:hover {
+      background: #e2e8f0;
+    }
+
+    button.danger {
+      background: #dc2626;
+    }
+
+    button.danger:hover {
+      background: #b91c1c;
+    }
+
+    /* global speed bar */
+    .global-speed-area {
+      background: #eef3fc;
+      border-radius: 1.5rem;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.8rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1rem;
+      justify-content: space-between;
+    }
+
+    .global-speed-control {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .global-speed-control label {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    #globalSpeedInput {
+      width: 90px;
+      padding: 0.5rem;
+      border-radius: 1.5rem;
+      border: 1px solid #b9d0f0;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .badge {
+      background: #2563eb10;
+      padding: 0.3rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    /* summary styling */
+    .summary-card {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .summary-title {
+      font-weight: 700;
+      font-size: 1.2rem;
+      border-left: 5px solid #2563eb;
+      padding-left: 0.7rem;
+      margin-bottom: 1rem;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.7rem;
+      font-size: 0.95rem;
+      padding: 0.3rem 0;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+
+    .stat-value {
+      font-weight: 700;
+      font-family: monospace;
+      font-size: 1rem;
+    }
+
+    .total-saved {
+      color: #059669;
+      font-weight: 800;
+    }
+
+    .buffer-area {
+      margin-top: 1.2rem;
+      background: #fef9e3;
+      border-radius: 1.2rem;
+      padding: 0.8rem;
+    }
+
+    .flex-btns {
+      display: flex;
+      gap: 0.6rem;
+      margin-top: 0.8rem;
+      justify-content: flex-end;
+    }
+
+    hr {
+      margin: 1rem 0;
+      border-color: #e9eef3;
+    }
+
+    .display-selector {
+      display: flex;
+      gap: 0.5rem;
+      background: #f1f5f9;
+      border-radius: 2rem;
+      padding: 0.3rem;
+      margin-bottom: 1rem;
+    }
+
+    .display-option {
+      flex: 1;
+      text-align: center;
+      padding: 0.4rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.1s;
+    }
+
+    .display-option.active {
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      color: #2563eb;
+    }
+
+    .info-note {
+      font-size: 0.7rem;
+      color: #5b6e8c;
+      margin-top: 0.5rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="app-header">
+    <h1>📺 Video Study Planner</h1>
+    <p>Track original time · speed-adjusted time · buffer · total study plan</p>
+  </div>
+
+  <div class="dashboard">
+    <!-- left side: video list manager -->
+    <div class="video-section">
+      <div class="global-speed-area">
+        <div class="global-speed-control">
+          <label>⚡ Global playback speed:</label>
+          <input type="number" id="globalSpeedInput" step="0.25" value="1.0" min="0.5" max="3.0">
+          <button id="applyGlobalSpeedBtn" class="outline" style="background:#fff;">Apply to all</button>
+        </div>
+        <span class="badge">💡 set once & apply to every video</span>
+      </div>
+
+      <div id="videosContainer" class="videos-list">
+        <!-- dynamic video cards will appear here -->
+      </div>
+
+      <div class="actions">
+        <button id="addVideoBtn" class="primary">+ Add video</button>
+        <button id="resetAllBtn" class="danger outline">🗑️ Reset all</button>
+      </div>
+      <div class="info-note">
+        * Duration format: minutes only (e.g. 12, 45) or MM:SS? just enter minutes number.
+      </div>
+    </div>
+
+    <!-- right side: summary panel with buffer and display toggles -->
+    <div class="summary-panel">
+      <div class="display-selector" id="displayModeSelector">
+        <div class="display-option" data-mode="hms">🕒 H:MM</div>
+        <div class="display-option" data-mode="hours">📊 Hours (decimal)</div>
+        <div class="display-option" data-mode="minutes">⏱️ Minutes</div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-title">📊 Time analysis</div>
+        <div id="summaryStats">
+          <!-- dynamic stats injected -->
+        </div>
+      </div>
+
+      <div class="buffer-area">
+        <label style="font-weight: 700; display: block; margin-bottom: 8px;">⏳ Buffer time (extra minutes)</label>
+        <input type="number" id="bufferMinutes" value="0" step="5" min="0" style="width:100%; padding: 0.6rem; border-radius: 1rem; border:1px solid #ddd;">
+        <div class="flex-btns">
+          <button id="applyBufferBtn" class="outline">Apply buffer to total</button>
+        </div>
+        <div class="info-note" style="margin-top: 8px;">Buffer adds to adjusted total time (extra breaks/practice)</div>
+      </div>
+
+      <div class="summary-card" style="margin-top: 0.5rem;">
+        <div class="summary-title">⏩ Time saved</div>
+        <div id="savedTimeDisplay">--</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ----- Data model -----
+  let videos = [];   // each video: { id, title, durationMin, speed }
+  let nextId = 1;
+  let globalBufferMinutes = 0;     // user buffer
+  let currentDisplayMode = "hms";  // 'hms', 'hours', 'minutes'
+
+  // Helper: convert minutes to desired format
+  function formatTime(minutesTotal, mode = currentDisplayMode) {
+    if (isNaN(minutesTotal) || minutesTotal < 0) minutesTotal = 0;
+    if (mode === 'minutes') {
+      return `${Math.round(minutesTotal)} min`;
+    } else if (mode === 'hours') {
+      let hoursDec = minutesTotal / 60;
+      return `${hoursDec.toFixed(2)} hrs`;
+    } else { // hms : Hours:MM (like 07:30)
+      let totalMins = Math.round(minutesTotal);
+      let hrs = Math.floor(totalMins / 60);
+      let mins = totalMins % 60;
+      return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+    }
+  }
+
+  // format seconds or minutes diff for saved time
+  function formatSavedTime(minutesSaved) {
+    if (currentDisplayMode === 'minutes') return `${Math.round(minutesSaved)} min`;
+    if (currentDisplayMode === 'hours') return `${(minutesSaved / 60).toFixed(2)} hrs`;
+    let totalMins = Math.round(minutesSaved);
+    let hrs = Math.floor(totalMins / 60);
+    let mins = totalMins % 60;
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  }
+
+  // Core calculations: total original minutes, total adjusted minutes (based on each video's speed)
+  function computeTotals() {
+    let originalTotal = 0;
+    let adjustedTotal = 0;
+    for (let v of videos) {
+      let dur = v.durationMin;
+      if (isNaN(dur) || dur <= 0) dur = 0;
+      originalTotal += dur;
+      let speed = v.speed;
+      if (isNaN(speed) || speed <= 0) speed = 1.0;
+      let effectiveTime = dur / speed;
+      adjustedTotal += effectiveTime;
+    }
+    return { originalTotal, adjustedTotal };
+  }
+
+  // with buffer: total adjusted + buffer
+  function getTotalWithBuffer() {
+    let { adjustedTotal } = computeTotals();
+    let buffer = globalBufferMinutes;
+    if (isNaN(buffer)) buffer = 0;
+    return adjustedTotal + buffer;
+  }
+
+  // time saved = originalTotal - adjustedTotal
+  function getTimeSaved() {
+    let { originalTotal, adjustedTotal } = computeTotals();
+    return originalTotal - adjustedTotal;
+  }
+
+  // render summary panel based on current videos, buffer & display mode
+  function renderSummary() {
+    const { originalTotal, adjustedTotal } = computeTotals();
+    const totalWithBuffer = getTotalWithBuffer();
+    const savedMinutes = getTimeSaved();
+
+    const originalFormatted = formatTime(originalTotal);
+    const adjustedFormatted = formatTime(adjustedTotal);
+    const totalBufferedFormatted = formatTime(totalWithBuffer);
+    const savedFormatted = formatSavedTime(savedMinutes);
+
+    const summaryHtml = `
+      <div class="stat-row"><span>📼 Original total watch time:</span><span class="stat-value">${originalFormatted}</span></div>
+      <div class="stat-row"><span>⚡ Speed-adjusted total:</span><span class="stat-value">${adjustedFormatted}</span></div>
+      <div class="stat-row"><span>🧘 + Buffer (${globalBufferMinutes} min):</span><span class="stat-value">${totalBufferedFormatted}</span></div>
+      <div class="stat-row"><span>⏱️ Total study plan:</span><span class="stat-value" style="background:#e6f7ec; padding:0 6px; border-radius:20px;">${totalBufferedFormatted}</span></div>
+    `;
+    document.getElementById("summaryStats").innerHTML = summaryHtml;
+
+    const savedSection = document.getElementById("savedTimeDisplay");
+    savedSection.innerHTML = `
+      <div class="stat-row"><span>💨 Time saved (due to speed):</span><span class="stat-value total-saved">${savedFormatted}</span></div>
+      <div class="stat-row"><span>🎯 Efficiency boost:</span><span class="stat-value">${originalTotal > 0 ? ((savedMinutes/originalTotal)*100).toFixed(1) : 0}% faster</span></div>
+    `;
+  }
+
+  // render all video cards from videos array
+  function renderVideoList() {
+    const container = document.getElementById("videosContainer");
+    if (!container) return;
+    if (videos.length === 0) {
+      container.innerHTML = `<div style="background:#f8fafc; border-radius:1.5rem; padding:2rem; text-align:center; color:#6c86a3;">✨ No videos added. Click "Add video" to start planning.</div>`;
+      renderSummary();
+      return;
+    }
+
+    let html = "";
+    videos.forEach(video => {
+      const durationVal = isNaN(video.durationMin) ? "" : video.durationMin;
+      const speedVal = isNaN(video.speed) ? 1.0 : video.speed;
+      // compute individual adjusted time for display (small hint)
+      let individualAdjusted = (video.durationMin && video.durationMin > 0) ? (video.durationMin / speedVal) : 0;
+      let adjustedHint = individualAdjusted > 0 ? `→ ${formatTime(individualAdjusted, currentDisplayMode)}` : "";
+      html += `
+        <div class="video-card" data-id="${video.id}">
+          <div class="card-row">
+            <div class="input-group" style="flex:2">
+              <label>📌 Title</label>
+              <input type="text" class="video-title" value="${escapeHtml(video.title)}" placeholder="e.g., Calculus lecture">
+            </div>
+            <div class="input-group">
+              <label>⏱️ Duration (minutes)</label>
+              <input type="number" class="video-duration" value="${durationVal}" step="1" min="0" placeholder="min">
+            </div>
+          </div>
+          <div class="card-row">
+            <div class="input-group">
+              <label>⚡ Playback speed</label>
+              <input type="number" class="video-speed" value="${speedVal}" step="0.25" min="0.5" max="3.0">
+            </div>
+            <div class="input-group">
+              <label style="opacity:0.7;">🎬 effective time</label>
+              <div style="background:#f0f4fa; border-radius:1rem; padding:0.5rem 0.7rem; font-size:0.85rem; font-family:monospace;">${adjustedHint || "—"}</div>
+            </div>
+            <button class="remove-btn" data-id="${video.id}">✖ Remove</button>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+
+    // attach event listeners to each card's inputs
+    videos.forEach(video => {
+      const card = document.querySelector(`.video-card[data-id='${video.id}']`);
+      if (!card) return;
+      const titleInput = card.querySelector('.video-title');
+      const durationInput = card.querySelector('.video-duration');
+      const speedInput = card.querySelector('.video-speed');
+      const removeBtn = card.querySelector('.remove-btn');
+
+      if (titleInput) {
+        titleInput.addEventListener('input', (e) => { video.title = e.target.value; renderSummary(); });
+      }
+      if (durationInput) {
+        durationInput.addEventListener('input', (e) => {
+          let val = parseFloat(e.target.value);
+          video.durationMin = isNaN(val) ? 0 : Math.max(0, val);
+          renderSummary();
+          renderVideoList();   // refresh to update effective hint
+        });
+      }
+      if (speedInput) {
+        speedInput.addEventListener('input', (e) => {
+          let val = parseFloat(e.target.value);
+          video.speed = (isNaN(val) || val <= 0) ? 1.0 : Math.min(3.0, Math.max(0.5, val));
+          renderSummary();
+          renderVideoList();
+        });
+      }
+      if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+          removeVideoById(video.id);
+        });
+      }
+    });
+    renderSummary();
+  }
+
+  function removeVideoById(id) {
+    videos = videos.filter(v => v.id !== id);
+    if (videos.length === 0) nextId = 1;
+    renderVideoList();
+  }
+
+  function addNewVideo() {
+    const newId = nextId++;
+    videos.push({
+      id: newId,
+      title: `Video ${videos.length+1}`,
+      durationMin: 10,
+      speed: 1.0,
+    });
+    renderVideoList();
+  }
+
+  function resetAllVideos() {
+    videos = [];
+    nextId = 1;
+    globalBufferMinutes = 0;
+    const bufferInput = document.getElementById("bufferMinutes");
+    if (bufferInput) bufferInput.value = 0;
+    renderVideoList();
+  }
+
+  function applyGlobalSpeedToAll() {
+    const globalSpeedElem = document.getElementById("globalSpeedInput");
+    let globalSpeed = parseFloat(globalSpeedElem.value);
+    if (isNaN(globalSpeed) || globalSpeed <= 0) globalSpeed = 1.0;
+    globalSpeed = Math.min(3.0, Math.max(0.5, globalSpeed));
+    for (let v of videos) {
+      v.speed = globalSpeed;
+    }
+    renderVideoList(); // refresh all cards & summary
+  }
+
+  function setDisplayMode(mode) {
+    currentDisplayMode = mode;
+    // update active class on selector
+    document.querySelectorAll('.display-option').forEach(opt => {
+      if (opt.getAttribute('data-mode') === mode) {
+        opt.classList.add('active');
+      } else {
+        opt.classList.remove('active');
+      }
+    });
+    renderVideoList();   // re-render cards to show effective time in new format
+    renderSummary();     // update summary panel formats
+  }
+
+  // helper to escape html to avoid injection
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+      return c;
+    });
+  }
+
+  // init with some demo videos (so it's not empty)
+  function initializeDemoVideos() {
+    videos = [
+      { id: nextId++, title: "Calculus - Limits", durationMin: 45, speed: 1.25 },
+      { id: nextId++, title: "Physics - Mechanics", durationMin: 32, speed: 1.0 },
+      { id: nextId++, title: "Chemistry Problems", durationMin: 58, speed: 1.5 }
+    ];
+  }
+
+  // attach global listeners and buffer
+  function bindGlobalEvents() {
+    const addBtn = document.getElementById("addVideoBtn");
+    if (addBtn) addBtn.addEventListener("click", addNewVideo);
+    const resetBtn = document.getElementById("resetAllBtn");
+    if (resetBtn) resetBtn.addEventListener("click", resetAllVideos);
+    const applyGlobalBtn = document.getElementById("applyGlobalSpeedBtn");
+    if (applyGlobalBtn) applyGlobalBtn.addEventListener("click", applyGlobalSpeedToAll);
+    const bufferInput = document.getElementById("bufferMinutes");
+    if (bufferInput) {
+      bufferInput.addEventListener("input", (e) => {
+        let val = parseFloat(e.target.value);
+        globalBufferMinutes = isNaN(val) ? 0 : Math.max(0, val);
+        renderSummary();
+      });
+    }
+    const applyBufferBtn = document.getElementById("applyBufferBtn");
+    if (applyBufferBtn) {
+      applyBufferBtn.addEventListener("click", () => {
+        let val = parseFloat(document.getElementById("bufferMinutes").value);
+        globalBufferMinutes = isNaN(val) ? 0 : Math.max(0, val);
+        renderSummary();
+      });
+    }
+    // display mode switching
+    const modeOptions = document.querySelectorAll('.display-option');
+    modeOptions.forEach(opt => {
+      opt.addEventListener('click', (e) => {
+        const mode = opt.getAttribute('data-mode');
+        if (mode === 'hms') setDisplayMode('hms');
+        else if (mode === 'hours') setDisplayMode('hours');
+        else if (mode === 'minutes') setDisplayMode('minutes');
+      });
+    });
+  }
+
+  // initial load
+  function init() {
+    initializeDemoVideos();
+    bindGlobalEvents();
+    renderVideoList();
+    setDisplayMode('hms');   // default H:MM style
+    // set buffer display default
+    document.getElementById("bufferMinutes").value = 0;
+    globalBufferMinutes = 0;
+    renderSummary();
+  }
+
+  init();
+</script>
+</body>
+</html>
