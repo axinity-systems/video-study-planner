@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>Axinity | Video Study Planner)</title>
+  <title>Axinity | Video Study Planner</title>
   <style>
     /* RESET & GLOBAL */
     * {
@@ -37,6 +37,7 @@
       --shadow-md: 0 8px 20px rgba(0,0,0,0.06);
       --transition: all 0.2s ease;
       --accent: #2563eb;
+      --accent-glow: rgba(37,99,235,0.25);
     }
 
     body.dark {
@@ -78,21 +79,66 @@
       width: 100%;
     }
 
+    /* PREMIUM BACK BUTTON - STICKY & GLASS */
+    .back-nav {
+      position: sticky;
+      top: 1rem;
+      z-index: 100;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--card-bg);
+      backdrop-filter: blur(8px);
+      background: rgba(var(--card-bg-rgb), 0.75);
+      border: 1px solid var(--border-medium);
+      border-radius: 2.5rem;
+      padding: 0.5rem 1.2rem;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      text-decoration: none;
+      transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1), border-color 0.2s, box-shadow 0.2s;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 1rem;
+      width: fit-content;
+    }
+    /* we need rgb conversion for card-bg to support glassmorphism */
+    body:not(.dark) .back-nav {
+      background: rgba(255, 255, 255, 0.85);
+    }
+    body.dark .back-nav {
+      background: rgba(30, 41, 59, 0.85);
+    }
+    .back-nav:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1), 0 0 0 1px var(--accent);
+      background: var(--card-bg);
+    }
+    .back-nav:active {
+      transform: translateY(1px);
+    }
+    /* top header adjustment */
     .app-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 0.75rem;
-      margin-bottom: 1.5rem;
-      padding: 0.5rem 0;
+      margin-bottom: 0.75rem;
+      padding: 0.25rem 0;
+      position: relative;
     }
-
     .header-title {
       flex: 1;
       text-align: center;
     }
-
+    .top-left-area {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    /* keeping original header layout */
     .app-header h1 {
       font-size: 1.6rem;
       font-weight: 700;
@@ -142,7 +188,7 @@
       .summary-panel {
         flex: 1.2;
         position: sticky;
-        top: 1rem;
+        top: 5rem;
       }
       body {
         padding: 1.5rem;
@@ -242,7 +288,7 @@
       display: block;
     }
 
-    .input-group input {
+    .input-group input, .duration-split-group input {
       width: 100%;
       padding: 0.65rem 0.75rem;
       border-radius: 1rem;
@@ -253,7 +299,28 @@
       transition: 0.15s;
     }
 
-    .input-group input:focus {
+    .duration-split-group {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex: 2;
+    }
+
+    .duration-split-group .duration-field {
+      flex: 1;
+    }
+
+    .duration-split-group .duration-field input {
+      width: 100%;
+      padding: 0.65rem 0.6rem;
+    }
+
+    .duration-split-group span {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .input-group input:focus, .duration-split-group input:focus {
       outline: none;
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(37,99,235,0.2);
@@ -465,8 +532,13 @@
     }
 
     @media (max-width: 480px) {
-      .input-group {
-        min-width: 100%;
+      .duration-split-group {
+        flex-direction: column;
+        gap: 0.4rem;
+        width: 100%;
+      }
+      .duration-split-group .duration-field {
+        width: 100%;
       }
       .card-row {
         flex-direction: column;
@@ -485,13 +557,23 @@
         width: 100%;
         text-align: center;
       }
+      .back-nav {
+        top: 0.5rem;
+        padding: 0.4rem 1rem;
+        font-size: 0.75rem;
+      }
     }
   </style>
 </head>
 <body>
 <div class="container">
+  <!-- Sticky back button: top-left, premium feel -->
+  <a href="https://axinity-systems.github.io/axinity-labs/" class="back-nav" target="_self">
+    ← Back to Axinity Labs
+  </a>
+
   <div class="app-header">
-    <div style="width: 40px;"></div>
+    <div style="width: 40px;"></div> <!-- spacer for symmetry -->
     <div class="header-title">
       <h1>📘 Axinity Video Study Planner</h1>
       <p>HH:MM duration · speed + buffer · smart planning</p>
@@ -515,7 +597,7 @@
         <button id="resetAllBtn" class="danger outline">🗑️ Reset all</button>
       </div>
       <div class="info-note">
-        🕒 Duration: type as minutes (e.g., 45) <strong>OR</strong> HH:MM (e.g., 1:30). Speed 0.5x–3.0x
+        🕒 Duration: Hours & Minutes fields (separated) — no more guesswork.
       </div>
     </div>
 
@@ -554,9 +636,8 @@
   let videos = [];       // each: { id, title, durationMin (number), speed }
   let nextId = 1;
   let globalBufferMinutes = 0;
-  let currentDisplayMode = "hms";   // 'hms', 'hours', 'minutes'
+  let currentDisplayMode = "hms";
 
-  // DOM refs
   const videosContainer = document.getElementById("videosContainer");
   const summaryStatsDiv = document.getElementById("summaryStats");
   const savedDisplayDiv = document.getElementById("savedTimeDisplay");
@@ -564,34 +645,21 @@
   const bufferInput = document.getElementById("bufferMinutes");
   const themeBtn = document.getElementById("themeToggleBtn");
 
-  // ---------- UTILITIES ----------
-  // Parse HH:MM or plain minutes
-  function parseDurationToMinutes(inputValue) {
-    if (typeof inputValue !== "string") inputValue = String(inputValue).trim();
-    if (!inputValue) return 0;
-    // check for colon pattern (HH:MM or H:MM)
-    if (inputValue.includes(":")) {
-      const parts = inputValue.split(":");
-      if (parts.length >= 2) {
-        const hours = parseInt(parts[0], 10);
-        const minutes = parseInt(parts[1], 10);
-        if (!isNaN(hours) && !isNaN(minutes)) {
-          return (hours * 60) + minutes;
-        }
-      }
-    }
-    // fallback: plain number (minutes)
-    const num = parseFloat(inputValue);
-    return isNaN(num) ? 0 : Math.max(0, num);
+  // Helper: parse from hours and minutes
+  function minutesFromHoursMinutes(hours, minutes) {
+    let hrs = parseFloat(hours);
+    let mins = parseFloat(minutes);
+    if (isNaN(hrs)) hrs = 0;
+    if (isNaN(mins)) mins = 0;
+    return (hrs * 60) + mins;
   }
 
-  // Format minutes to readable for input helper (display as minutes if simple, but we store minutes)
-  function formatDurationForInput(minutes) {
-    if (isNaN(minutes)) return "0";
-    if (minutes < 60) return Math.round(minutes).toString();
-    const hrs = Math.floor(minutes / 60);
-    const mins = Math.round(minutes % 60);
-    return `${hrs}:${mins.toString().padStart(2, '0')}`;
+  // Convert total minutes to { hours, minutes }
+  function splitMinutesToHM(minutesTotal) {
+    let mins = Math.round(minutesTotal);
+    let hours = Math.floor(mins / 60);
+    let minutes = mins % 60;
+    return { hours, minutes };
   }
 
   // Format time based on display mode
@@ -619,7 +687,6 @@
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   }
 
-  // Core calculations
   function computeTotals() {
     let originalTotal = 0;
     let adjustedTotal = 0;
@@ -643,13 +710,11 @@
     return originalTotal - adjustedTotal;
   }
 
-  // Render summary panel
   function renderSummary() {
     const { originalTotal, adjustedTotal } = computeTotals();
     const totalWithBuffer = getTotalWithBuffer();
     const savedMinutes = getTimeSaved();
     const percentSaved = originalTotal > 0 ? ((savedMinutes / originalTotal) * 100).toFixed(1) : 0;
-
     summaryStatsDiv.innerHTML = `
       <div class="stat-row"><span>📼 Original total:</span><span class="stat-value">${formatTime(originalTotal)}</span></div>
       <div class="stat-row"><span>⚡ Speed-adjusted:</span><span class="stat-value">${formatTime(adjustedTotal)}</span></div>
@@ -662,7 +727,6 @@
     `;
   }
 
-  // Save to localStorage
   function saveToLocalStorage() {
     const data = {
       videos,
@@ -687,14 +751,13 @@
         if (data.theme === 'dark') document.body.classList.add('dark');
         else document.body.classList.remove('dark');
         if (bufferInput) bufferInput.value = globalBufferMinutes;
-        if (globalSpeedInput) globalSpeedInput.value = "1.0";
         return true;
       }
     } catch(e) { console.warn(e); }
     return false;
   }
 
-  // Render all video cards with HH:MM smart input
+  // New: split duration render with hours + minutes inputs (no annoying exit)
   function renderVideoList() {
     if (!videosContainer) return;
     if (videos.length === 0) {
@@ -706,12 +769,11 @@
     let html = "";
     videos.forEach(video => {
       const durationMinVal = (isNaN(video.durationMin) ? 0 : video.durationMin);
+      const { hours, minutes } = splitMinutesToHM(durationMinVal);
       const speedVal = (isNaN(video.speed) ? 1.0 : Math.min(3.0, Math.max(0.5, video.speed)));
       const individualAdjusted = (durationMinVal > 0) ? (durationMinVal / speedVal) : 0;
       const adjustedHint = individualAdjusted > 0 ? formatTime(individualAdjusted) : "—";
       const titleSafe = escapeHtml(video.title);
-      // display duration in user-friendly HH:MM or minutes format inside input (shows as HH:MM if >=60)
-      const durationDisplayValue = formatDurationForInput(durationMinVal);
       
       html += `
         <div class="video-card" data-id="${video.id}">
@@ -720,10 +782,19 @@
               <label>📌 Title</label>
               <input type="text" class="video-title" value="${titleSafe}" placeholder="Lecture name">
             </div>
-            <div class="input-group">
-              <label>⏱️ Duration (HH:MM or minutes)</label>
-              <input type="text" class="video-duration-input" value="${escapeHtml(durationDisplayValue)}" placeholder="e.g., 1:30 or 45">
-              <span class="duration-hint">↳ ${durationMinVal} min total</span>
+            <div class="input-group" style="flex:2">
+              <label>⏱️ Duration (Hours & Minutes)</label>
+              <div class="duration-split-group">
+                <div class="duration-field">
+                  <input type="number" class="video-hours" placeholder="Hours" value="${hours}" step="1" min="0">
+                </div>
+                <span>h</span>
+                <div class="duration-field">
+                  <input type="number" class="video-mins" placeholder="Minutes" value="${minutes}" step="1" min="0" max="59">
+                </div>
+                <span>min</span>
+              </div>
+              <span class="duration-hint">↳ ${durationMinVal} total minutes</span>
             </div>
           </div>
           <div class="card-row">
@@ -742,41 +813,52 @@
     });
     videosContainer.innerHTML = html;
 
-    // attach listeners for each video card
+    // attach dynamic handlers per video
     videos.forEach(video => {
       const card = document.querySelector(`.video-card[data-id='${video.id}']`);
       if (!card) return;
       const titleInput = card.querySelector('.video-title');
-      const durationTextInput = card.querySelector('.video-duration-input');
+      const hoursInput = card.querySelector('.video-hours');
+      const minsInput = card.querySelector('.video-mins');
       const speedInput = card.querySelector('.video-speed');
       const removeBtn = card.querySelector('.remove-btn');
       const hintSpan = card.querySelector('.duration-hint');
 
-      function updateDurationFromString(value) {
-        const newMinutes = parseDurationToMinutes(value);
+      function updateDurationFromSplit() {
+        let hoursVal = parseFloat(hoursInput?.value);
+        let minsVal = parseFloat(minsInput?.value);
+        if (isNaN(hoursVal)) hoursVal = 0;
+        if (isNaN(minsVal)) minsVal = 0;
+        minsVal = Math.min(59, Math.max(0, minsVal));
+        const newMinutes = (hoursVal * 60) + minsVal;
         video.durationMin = newMinutes;
-        if (hintSpan) hintSpan.innerText = `↳ ${newMinutes} min total`;
-        // update input display format (HH:MM if >=60)
-        if (durationTextInput && durationTextInput.value !== formatDurationForInput(newMinutes)) {
-          durationTextInput.value = formatDurationForInput(newMinutes);
-        }
+        if (hintSpan) hintSpan.innerText = `↳ ${newMinutes} total minutes`;
+        // keep inputs consistent: enforce max minutes bound on minutes field
+        if (minsInput && parseFloat(minsInput.value) > 59) minsInput.value = 59;
         saveToLocalStorage();
         renderSummary();
-        renderVideoList();  // refresh effective time badge
+        // update effective badge without full re-render to avoid losing focus? but we do lightweight re-render only for badge data
+        // However speed & effective time badge depends on duration, better to re-render but it may cause focus loss. we will refresh only summary and update badge text
+        const effectiveDiv = card.querySelector('.effective-time-badge');
+        if (effectiveDiv) {
+          const newAdjusted = (newMinutes > 0) ? (newMinutes / video.speed) : 0;
+          effectiveDiv.innerText = newAdjusted > 0 ? formatTime(newAdjusted) : "—";
+        }
       }
 
+      if (hoursInput) {
+        hoursInput.addEventListener('input', () => updateDurationFromSplit());
+        hoursInput.addEventListener('blur', () => { if (hoursInput.value === '') hoursInput.value = 0; updateDurationFromSplit(); });
+      }
+      if (minsInput) {
+        minsInput.addEventListener('input', () => {
+          if (minsInput.value > 59) minsInput.value = 59;
+          updateDurationFromSplit();
+        });
+        minsInput.addEventListener('blur', () => { if (minsInput.value === '') minsInput.value = 0; updateDurationFromSplit(); });
+      }
       if (titleInput) {
         titleInput.addEventListener('input', (e) => { video.title = e.target.value; saveToLocalStorage(); renderSummary(); });
-      }
-      if (durationTextInput) {
-        durationTextInput.addEventListener('input', (e) => {
-          updateDurationFromString(e.target.value);
-        });
-        durationTextInput.addEventListener('blur', () => {
-          // ensure consistency
-          const normalized = formatDurationForInput(video.durationMin);
-          if (durationTextInput.value !== normalized) durationTextInput.value = normalized;
-        });
       }
       if (speedInput) {
         speedInput.addEventListener('input', (e) => {
@@ -784,7 +866,11 @@
           video.speed = (isNaN(val) || val <= 0) ? 1.0 : Math.min(3.0, Math.max(0.5, val));
           saveToLocalStorage();
           renderSummary();
-          renderVideoList();
+          const eff = card.querySelector('.effective-time-badge');
+          if (eff) {
+            const newAdj = (video.durationMin > 0) ? (video.durationMin / video.speed) : 0;
+            eff.innerText = newAdj > 0 ? formatTime(newAdj) : "—";
+          }
         });
       }
       if (removeBtn) removeBtn.addEventListener('click', () => removeVideoById(video.id));
@@ -805,7 +891,7 @@
     videos.push({
       id: newId,
       title: `Video ${videos.length + 1}`,
-      durationMin: 15,   // default 15 min
+      durationMin: 15,
       speed: 1.0,
     });
     saveToLocalStorage();
@@ -851,7 +937,6 @@
     });
   }
 
-  // Theme handling
   function initThemeFromStorage() {
     const stored = localStorage.getItem('axinity_study_planner_v2');
     let isDark = false;
@@ -872,10 +957,8 @@
   function toggleTheme() {
     if (document.body.classList.contains('dark')) {
       document.body.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
     } else {
       document.body.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
     }
     updateThemeButtonText();
     saveToLocalStorage();
@@ -911,14 +994,13 @@
     themeBtn?.addEventListener("click", toggleTheme);
   }
 
-  // Initialize app: load from storage or demo videos with HH:MM examples
   function initialize() {
     const hasSaved = loadFromLocalStorage();
     if (!hasSaved || videos.length === 0) {
       videos = [
-        { id: nextId++, title: "📖 Calculus Deep Dive", durationMin: 95, speed: 1.25 },    // 1h35
+        { id: nextId++, title: "📖 Calculus Deep Dive", durationMin: 95, speed: 1.25 },
         { id: nextId++, title: "⚛️ Quantum Mechanics", durationMin: 47, speed: 1.0 },
-        { id: nextId++, title: "🧪 Organic Chemistry", durationMin: 122, speed: 1.5 }       // 2h02
+        { id: nextId++, title: "🧪 Organic Chemistry", durationMin: 122, speed: 1.5 }
       ];
       globalBufferMinutes = 0;
       currentDisplayMode = "hms";
